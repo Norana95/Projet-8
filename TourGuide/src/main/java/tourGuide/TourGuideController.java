@@ -1,7 +1,10 @@
 package tourGuide;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import dto.JsonObject;
+import gpsUtil.location.Attraction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -10,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.jsoniter.output.JsonStream;
 
 import gpsUtil.location.VisitedLocation;
+import rewardCentral.RewardCentral;
+import tourGuide.service.RewardsService;
 import tourGuide.service.TourGuideService;
 import tourGuide.user.User;
 import tripPricer.Provider;
@@ -19,6 +24,12 @@ public class TourGuideController {
 
 	@Autowired
 	TourGuideService tourGuideService;
+
+    @Autowired
+    RewardsService rewardsService;
+
+    @Autowired
+    RewardCentral rewardCentral;
 	
     @RequestMapping("/")
     public String index() {
@@ -42,8 +53,23 @@ public class TourGuideController {
         //    Note: Attraction reward points can be gathered from RewardsCentral
     @RequestMapping("/getNearbyAttractions") 
     public String getNearbyAttractions(@RequestParam String userName) {
-    	VisitedLocation visitedLocation = tourGuideService.getUserLocation(getUser(userName));
-    	return JsonStream.serialize(tourGuideService.getNearByAttractions(visitedLocation));
+        VisitedLocation visitedLocation = tourGuideService.getUserLocation(getUser(userName));
+        List<Attraction> fiveAttractions = tourGuideService.getNearByAttractions(visitedLocation);
+        List<JsonObject> jsonObjectList = new ArrayList<>();
+        for(Attraction attraction : fiveAttractions){
+            double distance = rewardsService.getDistance(attraction, visitedLocation.location);
+            int rewardPoint = rewardCentral.getAttractionRewardPoints(attraction.attractionId, visitedLocation.userId);
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.setAttractionName(attraction.attractionName);
+            jsonObject.setLatitudeAttractionLocation(attraction.latitude);
+            jsonObject.setLongitudeAttractionLocation(attraction.longitude);
+            jsonObject.setLatitudeUserLocation(visitedLocation.location.latitude);
+            jsonObject.setLongitudeUserLocation(visitedLocation.location.longitude);
+            jsonObject.setDistanceBetweenUserAndAttraction(distance);
+            jsonObject.setRewardsPointOfAttraction(rewardPoint);
+            jsonObjectList.add(jsonObject);
+        }
+        return JsonStream.serialize(jsonObjectList);
     }
     
     @RequestMapping("/getRewards") 
