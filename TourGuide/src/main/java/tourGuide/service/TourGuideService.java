@@ -115,7 +115,6 @@ public class TourGuideService {
             distance = rewardsService.getDistance(attraction, visitedLocation.location);
             mapDistanceWithAttraction.put(distance, attraction);
         }
-        System.out.println(mapDistanceWithAttraction);
         mapDistanceWithAttraction.forEach((key, value) -> {
             nearbyAttractions.add(mapDistanceWithAttraction.get(key));
 

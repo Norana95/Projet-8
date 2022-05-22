@@ -67,6 +67,14 @@ public class TestRewardsService {
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 		
 		rewardsService.calculateRewards(tourGuideService.getAllUsers().get(0));
+		ThreadPoolExecutor executorService = (ThreadPoolExecutor) rewardsService.getExecutor();
+		while (executorService.getActiveCount() > 0) {
+			try {
+				TimeUnit.SECONDS.sleep(1);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		List<UserReward> userRewards = tourGuideService.getUserRewards(tourGuideService.getAllUsers().get(0));
 		tourGuideService.tracker.stopTracking();
 
